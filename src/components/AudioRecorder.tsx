@@ -25,54 +25,70 @@ const AudioRecorder: React.FC = () => {
     }
   };
 
-
   const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
-
-    mediaRecorder.start();
-    setIsRecording(true);
-
-    mediaRecorder.ondataavailable = (event) => {
-      audioChunksRef.current.push(event.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setAudioUrl(audioUrl);
-      audioChunksRef.current = [];
-    };
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+  
+      mediaRecorder.start();
+      setIsRecording(true);
+  
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+  
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+        console.log("Audio recording stopped", audioBlob);
+  
+        try {
+          // Converter o áudio para Base64
+          const audioBase64 = await convertToBase64(audioBlob);
+  
+          // Fazer a requisição com o áudio em Base64
+          const response = await fetch("/api/transcribeChatGpt", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ audioBase64 }),
+          });
+  
+          if (!response.ok) {
+            throw new Error("Failed to transcribe audio");
+          }
+  
+          const data = await response.json();
+          setTranscription(data.transcription);
+        } catch (error) {
+          console.error("Error transcribing audio:", error);
+        } finally {
+          audioChunksRef.current = [];
+          setAudioUrl(URL.createObjectURL(audioBlob));
+        }
+      };
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
   };
-
+  
+  // Função auxiliar para converter Blob em Base64
+  const convertToBase64 = (blob: any) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        const base64String = reader?.result?.split(",")[1]; // Remover prefixo `data:audio/wav;base64,`
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+    });
+  };
+  
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
-  };
-
-  const transcribeAudio = async () => {
-    console.log("Transcribing audio...");
-    console.log('audioUrl',audioUrl);
-    if (!audioUrl) return;
-  
-    const audioBlob = await fetch(audioUrl).then((res) => res.blob());
-    const audioArrayBuffer = await audioBlob.arrayBuffer();
-    const base64Audio = btoa(
-      new Uint8Array(audioArrayBuffer)
-        .reduce((data, byte) => data + String.fromCharCode(byte), "")
-    );
-  
-    const response = await fetch("/api/transcribe", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ audio: base64Audio }),
-    });
-  
-    const { transcription } = await response.json();
-    setTranscription(transcription);
   };
 
   return (
@@ -112,14 +128,6 @@ const AudioRecorder: React.FC = () => {
           <audio controls src={audioUrl} />
         </div>
       )}
-
-      <button
-        className="bg-green-500 text-white px-4 py-2 rounded"
-        onClick={transcribeAudio}
-        disabled={!audioUrl}
-      >
-        Transcribe Audio
-      </button>
 
       {transcription && (
         <p className="mt-4 text-gray-700">Transcription: {transcription}</p>

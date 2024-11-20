@@ -10,6 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  console.log('process.e',process.env['OPENAI_API_KEY']);
+
   const { topic } = req.body; // Recebe o tema da pergunta
   if (!topic) {
     return res.status(400).json({ error: "Topic is required" });
