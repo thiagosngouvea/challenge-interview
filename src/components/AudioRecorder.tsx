@@ -3,13 +3,11 @@ import React, { useState, useRef } from "react";
 interface AudioRecorderProps {
   question: string;
   questionGpt: string | null;
-  handleNextStep: () => void;
 }
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({
   question,
   questionGpt,
-  handleNextStep,
 }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -64,7 +62,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           if (questionGpt !== null) {
             localStorage.setItem(`${question}.questionGpt`, questionGpt);
           }
-          handleNextStep();
         }
         // Save audio and transcription to local storage
       };
@@ -107,7 +104,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
             className="bg-blue-500 text-white px-4 py-2 rounded"
             onClick={startRecording}
           >
-            Começar a gravação
+            {audioUrl ? "Regravar" : "Iniciar a gravação"}
           </button>
         )}
       </div>
