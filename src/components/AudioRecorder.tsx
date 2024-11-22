@@ -1,29 +1,20 @@
 import React, { useState, useRef } from "react";
 
-const AudioRecorder: React.FC = () => {
+interface AudioRecorderProps {
+  question: string;
+  questionGpt: string | null;
+}
+
+const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  question,
+  questionGpt,
+}: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [transcription, setTranscription] = useState<string | null>(null);
-  const [question, setQuestion] = useState<string | null>(null);
+  // const [question, setQuestion] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-
-  const fetchQuestion = async () => {
-    try {
-      const response = await fetch("/api/generateQuestion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ topic: "frontend development" }), // Tema pode ser dinâmico
-      });
-
-      const data = await response.json();
-      setQuestion(data.question);
-    } catch (error) {
-      console.error("Failed to fetch question:", error);
-    }
-  };
 
   const startRecording = async () => {
     try {
@@ -45,6 +36,7 @@ const AudioRecorder: React.FC = () => {
         try {
           // Converter o áudio para Base64
           const audioBase64 = await convertToBase64(audioBlob);
+          localStorage.setItem(`${question}.audioUrl`, audioBase64 as string);
   
           // Fazer a requisição com o áudio em Base64
           const response = await fetch("/api/transcribeChatGpt", {
@@ -61,12 +53,18 @@ const AudioRecorder: React.FC = () => {
   
           const data = await response.json();
           setTranscription(data.transcription);
+          localStorage.setItem(`${question}.transcription`, data.transcription as string);
+
         } catch (error) {
           console.error("Error transcribing audio:", error);
         } finally {
           audioChunksRef.current = [];
           setAudioUrl(URL.createObjectURL(audioBlob));
+          if (questionGpt !== null) {
+            localStorage.setItem(`${question}.questionGpt`, questionGpt);
+          }
         }
+        // Save audio and transcription to local storage
       };
     } catch (error) {
       console.error("Error starting recording:", error);
@@ -93,32 +91,20 @@ const AudioRecorder: React.FC = () => {
 
   return (
     <div className="p-4 border rounded shadow">
-      <h2 className="text-lg font-bold mb-2 text-black">Interview Question</h2>
-      {question ? (
-        <p className="mb-4 text-gray-700">{question}</p>
-      ) : (
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={fetchQuestion}
-        >
-          Generate Question
-        </button>
-      )}
-
-      <div className="mb-4">
+      <div className="">
         {isRecording ? (
           <button
             className="bg-red-500 text-white px-4 py-2 rounded"
             onClick={stopRecording}
           >
-            Stop Recording
+            Parar a gravação
           </button>
         ) : (
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded"
             onClick={startRecording}
           >
-            Start Recording
+            Começar a gravação
           </button>
         )}
       </div>
