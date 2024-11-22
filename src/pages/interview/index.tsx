@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AudioRecorder from "@/components/AudioRecorder";
 import { Steps } from "antd";
+import { useRouter } from "next/router";
 
 const questions = [
   "Pergunta-01",
@@ -17,6 +18,8 @@ const Interview: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(Array(questions.length).fill(stepDuration));
   const [question, setQuestion] = useState<string | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+
+  const router = useRouter();
 
   // Verificar perguntas respondidas no localStorage
   const checkCompletedSteps = () => {
@@ -85,6 +88,10 @@ const Interview: React.FC = () => {
   const handleNextStep = () => {
     if (current < questions.length - 1) {
       setCurrent((prev) => prev + 1);
+    }
+
+    if (current === questions.length - 1) {
+      router.push("/answers");
     }
   };
 
