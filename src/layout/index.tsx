@@ -40,7 +40,7 @@ export default function LayoutSidebar({ children }: LayoutProps) {
         <div className="site-layout-content">{children}</div>
       </Content>
       <Footer style={{ textAlign: "center" }}>
-        Ant Design ©2018 Created by Ant UED
+        Desenvolvido por <a href="https://www.linkedin.com/in/thiago-gouv%C3%AAa-aa3bb915a/" target="_blank" rel="noreferrer">Thiago Gouvêa</a>
       </Footer>
     </Layout>
   );

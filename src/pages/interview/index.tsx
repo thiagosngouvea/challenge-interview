@@ -45,7 +45,7 @@ const Interview: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          topic: "Desenvolvimento frontend, react, nextjs, e outros assuntos relevantes",
+          topic: "Qualquer tema relacionado a programação",
         }),
       });
 
@@ -99,7 +99,7 @@ const Interview: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 space-y-8">
+    <div className="flex flex-col items-center justify-center bg-gray-100 space-y-8">
       <Steps
         type="navigation"
         size="small"
