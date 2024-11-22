@@ -3,55 +3,46 @@ import AudioRecorder from "@/components/AudioRecorder";
 import { Steps } from "antd";
 import { useRouter } from "next/router";
 
-const questions = [
-  "Pergunta-01",
-  "Pergunta-02",
-  "Pergunta-03",
-  "Pergunta-04",
-  "Pergunta-05",
-];
-
-const stepDuration = 120; // Duração de 2 minutos (120 segundos) para cada passo
+const questions = ["Pergunta-01", "Pergunta-02", "Pergunta-03", "Pergunta-04", "Pergunta-05"];
+const stepDuration = 120; // 2 minutos (120 segundos)
 
 const Interview: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [timeLeft, setTimeLeft] = useState(Array(questions.length).fill(stepDuration));
-  const [question, setQuestion] = useState<string | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [isInterviewCompleted, setIsInterviewCompleted] = useState(false);
+  const [question, setQuestion] = useState<string | null>(null);
 
   const router = useRouter();
 
-  // Verificar perguntas respondidas no localStorage
+  // Verificar perguntas respondidas
   const checkCompletedSteps = () => {
-    const completed: number[] = [];
-    questions.forEach((question, index) => {
-      const audioKey = `${question}.audioUrl`;
-      if (localStorage.getItem(audioKey)) {
-        completed.push(index);
-      }
-    });
-
+    const completed = questions.reduce<number[]>((acc, question, index) => {
+      if (localStorage.getItem(`${question}.audioUrl`)) acc.push(index);
+      return acc;
+    }, []);
     setCompletedSteps(completed);
-
-    // Definir o passo inicial como o próximo não concluído
-    const nextStep = questions.findIndex((_, i) => !completed.includes(i));
-
-    setCurrent(nextStep === -1 ? questions.length - 1 : nextStep);
+    setIsInterviewCompleted(completed.length === questions.length);
   };
 
-  // Buscar questão do servidor
+  // Reiniciar entrevista
+  const restartInterview = () => {
+    setCurrent(0);
+    setTimeLeft(Array(questions.length).fill(stepDuration));
+    setCompletedSteps([]);
+    setIsInterviewCompleted(false);
+    localStorage.clear();
+  };
+
+  // Buscar pergunta
   const fetchQuestion = async () => {
+    if (current >= questions.length || isInterviewCompleted) return; // Evita chamadas desnecessárias
     try {
       const response = await fetch("/api/generateQuestion", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          topic: "Qualquer tema relacionado a programação",
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: "Qualquer tema relacionado a programação" }),
       });
-
       const data = await response.json();
       setQuestion(data.question);
     } catch (error) {
@@ -61,42 +52,35 @@ const Interview: React.FC = () => {
 
   useEffect(() => {
     checkCompletedSteps();
-    fetchQuestion();
+    fetchQuestion(); // Só será chamado se o índice for válido
   }, [current]);
 
-  // Atualizar o contador do passo atual
   useEffect(() => {
-    const timer =
-      timeLeft[current] > 0 &&
-      setInterval(() => {
-        setTimeLeft((prev) =>
-          prev.map((time, index) => (index === current ? time - 1 : time))
-        );
-      }, 1000);
+    if (isInterviewCompleted || timeLeft[current] === 0) return;
 
-    if (timeLeft[current] === 0) {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) =>
+        prev.map((time, index) => (index === current ? time - 1 : time))
+      );
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, current, isInterviewCompleted]);
+
+  useEffect(() => {
+    if (timeLeft[current] === 0 && current < questions.length) {
       handleNextStep();
     }
-
-    return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
-    };
   }, [timeLeft, current]);
 
   const handleNextStep = () => {
+    if (isInterviewCompleted) return;
+
     if (current < questions.length - 1) {
       setCurrent((prev) => prev + 1);
+    } else {
+      setIsInterviewCompleted(true);
     }
-
-    if (current === questions.length - 1) {
-      router.push("/answers");
-    }
-  };
-
-  const onChangeStep = (value: number) => {
-    setCurrent(value);
   };
 
   const formatTime = (seconds: number) => {
@@ -107,26 +91,51 @@ const Interview: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center bg-gray-100 space-y-8">
-      <Steps
-        type="navigation"
-        size="small"
-        current={current}
-        onChange={onChangeStep}
-        className="site-navigation-steps"
-        items={questions.map((question, index) => ({
-          title: `Pergunta 0${index + 1}`,
-          subTitle: completedSteps.includes(index)
-            ? "Concluído"
-            : formatTime(timeLeft[index]),
-        }))}
-      />
-      <div className="bg-white p-6 rounded-lg shadow-md w-96 text-center">
-        <h1 className="text-xl font-semibold">{question}</h1>
-        <p className="text-gray-500 mt-2">
-          Você tem {formatTime(timeLeft[current])} minutos para responder.
-        </p>
-        <AudioRecorder question={questions[current]} questionGpt={question} handleNextStep={handleNextStep}/>
-      </div>
+      {isInterviewCompleted ? (
+        <div className="bg-white p-6 rounded-lg shadow-md w-96 text-center m-4">
+          <h1 className="text-xl font-semibold">Entrevista Concluída!</h1>
+          <p className="text-gray-500 mt-2">Você completou todas as perguntas. Deseja recomeçar?</p>
+          <button
+            onClick={restartInterview}
+            className="bg-blue-500 text-white px-4 py-2 mt-4 rounded-lg mr-2"
+          >
+            Recomeçar
+          </button>
+          <button
+            onClick={restartInterview}
+            className="bg-green-500 text-white px-4 py-2 mt-4 rounded-lg"
+          >
+            Concluir
+          </button>
+        </div>
+      ) : (
+        <>
+          <Steps
+            type="navigation"
+            size="small"
+            current={current}
+            items={questions.map((question, index) => ({
+              title: `Pergunta 0${index + 1}`,
+              subTitle: completedSteps.includes(index)
+                ? "Concluído"
+                : formatTime(timeLeft[index]),
+            }))}
+          />
+          <div className="bg-white p-6 rounded-lg shadow-md w-96 text-center">
+            <h1 className="text-xl font-semibold">{question}</h1>
+            <p className="text-gray-500 mt-2">
+              Você tem {formatTime(timeLeft[current])} minutos para responder.
+            </p>
+            <AudioRecorder question={questions[current]} questionGpt={question} />
+          </div>
+          <button
+            onClick={handleNextStep}
+            className="bg-blue-500 text-white px-4 py-2 mt-4 rounded-lg"
+          >
+            {current === questions.length - 1 ? "Finalizar" : "Próxima Pergunta"}
+          </button>
+        </>
+      )}
     </div>
   );
 };
