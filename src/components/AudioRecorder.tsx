@@ -3,11 +3,13 @@ import React, { useState, useRef } from "react";
 interface AudioRecorderProps {
   question: string;
   questionGpt: string | null;
+  handleNextStep: () => void;
 }
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({
   question,
   questionGpt,
+  handleNextStep,
 }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -31,7 +33,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-        console.log("Audio recording stopped", audioBlob);
   
         try {
           // Converter o áudio para Base64
@@ -63,6 +64,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           if (questionGpt !== null) {
             localStorage.setItem(`${question}.questionGpt`, questionGpt);
           }
+          handleNextStep();
         }
         // Save audio and transcription to local storage
       };
@@ -110,13 +112,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       </div>
 
       {audioUrl && (
-        <div className="mb-4">
+        <div className="my-4">
           <audio controls src={audioUrl} />
         </div>
-      )}
-
-      {transcription && (
-        <p className="mt-4 text-gray-700">Transcription: {transcription}</p>
       )}
     </div>
   );

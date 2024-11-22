@@ -15,9 +15,28 @@ const stepDuration = 120; // Duração de 2 minutos (120 segundos) para cada pas
 const Interview: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [timeLeft, setTimeLeft] = useState(Array(questions.length).fill(stepDuration));
-    const [question, setQuestion] = useState<string | null>(null);
+  const [question, setQuestion] = useState<string | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
+  // Verificar perguntas respondidas no localStorage
+  const checkCompletedSteps = () => {
+    const completed: number[] = [];
+    questions.forEach((question, index) => {
+      const audioKey = `${question}.audioUrl`;
+      if (localStorage.getItem(audioKey)) {
+        completed.push(index);
+      }
+    });
 
+    setCompletedSteps(completed);
+
+    // Definir o passo inicial como o próximo não concluído
+    const nextStep = questions.findIndex((_, i) => !completed.includes(i));
+
+    setCurrent(nextStep === -1 ? questions.length - 1 : nextStep);
+  };
+
+  // Buscar questão do servidor
   const fetchQuestion = async () => {
     try {
       const response = await fetch("/api/generateQuestion", {
@@ -25,7 +44,9 @@ const Interview: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ topic: "Desenvolvimento frontend, react, nextjs, e outros assuntos relevantes" }), // Tema pode ser dinâmico
+        body: JSON.stringify({
+          topic: "Desenvolvimento frontend, react, nextjs, e outros assuntos relevantes",
+        }),
       });
 
       const data = await response.json();
@@ -35,11 +56,12 @@ const Interview: React.FC = () => {
     }
   };
 
-    useEffect(() => {
-        fetchQuestion();
-    }, [current]);
+  useEffect(() => {
+    checkCompletedSteps();
+    fetchQuestion();
+  }, [current]);
 
-  // Atualiza o contador do passo atual
+  // Atualizar o contador do passo atual
   useEffect(() => {
     const timer =
       timeLeft[current] > 0 &&
@@ -49,7 +71,6 @@ const Interview: React.FC = () => {
         );
       }, 1000);
 
-    // Quando o contador do passo atual atinge zero, avança para o próximo passo
     if (timeLeft[current] === 0) {
       handleNextStep();
     }
@@ -71,7 +92,6 @@ const Interview: React.FC = () => {
     setCurrent(value);
   };
 
-  // Formata o tempo no formato MM:SS
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -88,7 +108,9 @@ const Interview: React.FC = () => {
         className="site-navigation-steps"
         items={questions.map((question, index) => ({
           title: `Pergunta 0${index + 1}`,
-          subTitle: formatTime(timeLeft[index]),
+          subTitle: completedSteps.includes(index)
+            ? "Concluído"
+            : formatTime(timeLeft[index]),
         }))}
       />
       <div className="bg-white p-6 rounded-lg shadow-md w-96 text-center">
@@ -96,10 +118,7 @@ const Interview: React.FC = () => {
         <p className="text-gray-500 mt-2">
           Você tem {formatTime(timeLeft[current])} minutos para responder.
         </p>
-        <AudioRecorder 
-            question={questions[current]} 
-            questionGpt={question}
-        />
+        <AudioRecorder question={questions[current]} questionGpt={question} handleNextStep={handleNextStep}/>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Collapse, Panel } from "antd";
+import { Collapse } from "antd";
 import React, { useEffect, useState } from "react";
 
 interface Answer {
@@ -75,7 +75,7 @@ const Answers: React.FC = () => {
   return (
     <div className="m-16">
       {answers.map((answer, index) => (
-        <div key={index} className="bg-white p-4 rounded-xl shadow-xl">
+        <div key={index} className="bg-white p-4 rounded-xl shadow-xl mb-4">
           <h3 className="font-medium">{answer.question}</h3>
           <audio className="my-4" controls src={`data:audio/mpeg;base64,${answer.audioUrl}`} />
             
