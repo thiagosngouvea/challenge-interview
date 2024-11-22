@@ -79,7 +79,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onloadend = () => {
-        const base64String = reader?.result?.split(",")[1]; // Remover prefixo `data:audio/wav;base64,`
+        const result = reader.result as string;
+        const base64String = result.split(",")[1]; // Remover prefixo `data:audio/wav;base64,`
         resolve(base64String);
       };
       reader.onerror = reject;

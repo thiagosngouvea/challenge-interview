@@ -6,11 +6,15 @@ const { Header, Content, Footer } = Layout;
 
 const MENU_ITEMS = [
     {
-        key: "1",
-        label: "Entrevista",
+      key: "1",
+      label: "Inicio",
     },
     {
         key: "2",
+        label: "Entrevista",
+    },
+    {
+        key: "3",
         label: "Respostas",
     },
 ];
@@ -29,7 +33,7 @@ export default function LayoutSidebar({ children }: LayoutProps) {
           {MENU_ITEMS.map(({ key, label }) => (
             <Menu.Item 
               key={key}
-              onClick={() => router.push(key === "1" ? "/interview" : "/answers")}
+              onClick={() => router.push(key === "1" ? "/" : key === "2" ? "/interview" : "/answers")}
             >
               {label}
             </Menu.Item>
