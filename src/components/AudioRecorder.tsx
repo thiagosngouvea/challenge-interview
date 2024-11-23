@@ -3,14 +3,17 @@ import React, { useState, useRef } from "react";
 interface AudioRecorderProps {
   question: string;
   questionGpt: string | null;
+  audioUrl: string | null;
+  setAudioUrl: (audioUrl: string) => void;
 }
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({
   question,
   questionGpt,
+  audioUrl,
+  setAudioUrl,
 }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [transcription, setTranscription] = useState<string | null>(null);
   // const [question, setQuestion] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);

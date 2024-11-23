@@ -12,6 +12,8 @@ const Interview: React.FC = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isInterviewCompleted, setIsInterviewCompleted] = useState(false);
   const [question, setQuestion] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
 
   const router = useRouter();
 
@@ -76,6 +78,8 @@ const Interview: React.FC = () => {
   const handleNextStep = () => {
     if (isInterviewCompleted) return;
 
+    setAudioUrl(null);
+
     if (current < questions.length - 1) {
       setCurrent((prev) => prev + 1);
     } else {
@@ -102,7 +106,7 @@ const Interview: React.FC = () => {
             Recomeçar
           </button>
           <button
-            onClick={restartInterview}
+            onClick={() => router.push("/answers")}
             className="bg-green-500 text-white px-4 py-2 mt-4 rounded-lg"
           >
             Concluir
@@ -126,7 +130,12 @@ const Interview: React.FC = () => {
             <p className="text-gray-500 mt-2">
               Você tem {formatTime(timeLeft[current])} minutos para responder.
             </p>
-            <AudioRecorder question={questions[current]} questionGpt={question} />
+            <AudioRecorder
+              question={questions[current]} 
+              questionGpt={question} 
+              audioUrl={audioUrl}
+              setAudioUrl={setAudioUrl}
+            />
           </div>
           <button
             onClick={handleNextStep}
