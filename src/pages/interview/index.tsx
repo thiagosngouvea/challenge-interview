@@ -137,12 +137,14 @@ const Interview: React.FC = () => {
               setAudioUrl={setAudioUrl}
             />
           </div>
-          <button
-            onClick={handleNextStep}
-            className="bg-blue-500 text-white px-4 py-2 mt-4 rounded-lg"
-          >
-            {current === questions.length - 1 ? "Finalizar" : "Próxima Pergunta"}
-          </button>
+          {!!audioUrl && (
+            <button
+              onClick={handleNextStep}
+              className="bg-blue-500 text-white px-4 py-2 mt-4 rounded-lg"
+            >
+              {current === questions.length - 1 ? "Finalizar" : "Próxima Pergunta"}
+            </button>
+          )}
         </>
       )}
     </div>
