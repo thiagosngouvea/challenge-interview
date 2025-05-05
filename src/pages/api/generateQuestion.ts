@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const chatCompletion = await client.chat.completions.create({
-        messages: [{ role: 'user', content: `Gere uma questão de entrevista sobre ${topic}. Eu quero apenas a pergunta, sem mais explicações ou considerações. Essa pergunta vai ser exibida em um painel e vai ser respondida por um candidato, então as perguntas tem que ser totalmente diferentes uma das outras. Deve ser em português do brasil` }],
+        messages: [{ role: 'user', content: `Gere uma questão de entrevista sobre ${topic}. Eu quero apenas a pergunta, sem mais explicações ou considerações. Essa pergunta vai ser exibida em um painel e vai ser respondida por um aluno, então as perguntas tem que ser totalmente diferentes uma das outras.` }],
         model: 'gpt-4o-mini',
       });
 

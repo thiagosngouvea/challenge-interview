@@ -43,7 +43,7 @@ const Interview: React.FC = () => {
       const response = await fetch("/api/generateQuestion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: "Qualquer tema relacionado a programação" }),
+        body: JSON.stringify({ topic: "React, Next.JS ou React Native" }),
       });
       const data = await response.json();
       setQuestion(data.question);
