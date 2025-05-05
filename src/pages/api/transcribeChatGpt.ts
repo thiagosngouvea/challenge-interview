@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const audioBuffer = Buffer.from(audioBase64, "base64");
 
       // Criar um arquivo temporário WAV
-      const tempFilePath = path.join(process.cwd(), "temp_audio.wav");
+      const tempFilePath = path.join("/tmp", "temp_audio.wav");
       fs.writeFileSync(tempFilePath, audioBuffer);
 
       // Enviar o arquivo para o OpenAI
